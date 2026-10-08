@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Défi des Fermentations — Boulangerie-Pâtisserie</title>
+<style>
+:root{
+  --cream:#fff8ea; --cream2:#f5e7cf; --brown:#6f3f24; --brown2:#8e5736;
+  --orange:#d9822b; --gold:#e5ad52; --green:#4e8b61; --red:#bd5148;
+  --ink:#34251e; --paper:#fffdf8; --line:#dec9aa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+body{
+  background:
+    radial-gradient(circle at 10% 10%,rgba(229,173,82,.20),transparent 25%),
+    radial-gradient(circle at 90% 90%,rgba(141,87,54,.13),transparent 25%),
+    var(--cream);
+}
+.screen{display:none;min-height:100vh;padding:22px;align-items:center;justify-content:center}
+.screen.active{display:flex}
+button{font:inherit}
+.main-button{
+  border:0;border-radius:16px;padding:15px 25px;background:linear-gradient(135deg,var(--orange),var(--brown2));
+  color:white;font-weight:800;cursor:pointer;box-shadow:0 7px 16px rgba(111,63,36,.22);
+  transition:.18s transform,.18s box-shadow;
+}
+.main-button:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(111,63,36,.28)}
+.main-button:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ACCUEIL */
+#playersScreen{background:linear-gradient(135deg,#fffaf0,#f4e2c5)}
+.players-box{
+  width:min(760px,100%);padding:42px;background:rgba(255,253,248,.96);border:2px solid var(--line);
+  border-radius:30px;box-shadow:0 20px 55px rgba(80,45,25,.15);text-align:center;
+}
+.logo{font-size:70px;line-height:1}
+.players-box h1{font-size:clamp(30px,5vw,50px);margin:10px 0 5px;color:var(--brown)}
+.players-box h2{margin:0 0 12px;color:var(--orange);font-size:20px}
+.players-box p{color:#745f52;font-size:17px;line-height:1.5}
+.rules{
+  margin:22px auto;text-align:left;max-width:620px;padding:18px 22px;background:#fff6e6;
+  border:1px dashed var(--gold);border-radius:18px;line-height:1.6
+}
+.players-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:22px 0}
+.player-field{position:relative}
+.player-field input{
+  color:#34251e;
+  width:100%;padding:15px 15px 15px 45px;border:2px solid #e2d2bb;border-radius:13px;
+  font-size:16px;background:white;outline:none
+}
+.player-field input:focus{border-color:var(--orange)}
+.player-field input::placeholder{color:#7a675b;opacity:1}
+.player-color{position:absolute;width:17px;height:17px;border-radius:50%;left:15px;top:50%;transform:translateY(-50%);z-index:2}
+.c1{background:#d65b4a}.c2{background:#5a8fc2}.c3{background:#5b9a68}.c4{background:#9a68a8}.c5{background:#e2a23a}.c6{background:#4c9a91}
+
+/* JEU */
+#diceScreen,#boardAfterQuestionScreen,#endTurnScreen{background:linear-gradient(135deg,#fffaf0,#f3e2c7)}
+.game-wrap{width:min(1450px,100%)}
+.header{text-align:center;margin-bottom:15px}
+.header h1{color:var(--brown);margin:6px 0;font-size:clamp(28px,4vw,44px)}
+.header p{margin:0;color:#7b6253}
+.player-circle{
+  width:62px;height:62px;margin:auto;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:white;font-weight:900;font-size:25px;border:4px solid white;box-shadow:0 6px 18px rgba(0,0,0,.18)
+}
+.dice-and-board{display:grid;grid-template-columns:220px 1fr;gap:22px;align-items:center}
+.dice-panel{text-align:center}
+.dice{
+  width:155px;height:155px;margin:0 auto 20px;background:#fffdf8;border:3px solid var(--line);border-radius:28px;
+  display:flex;align-items:center;justify-content:center;font-size:100px;box-shadow:0 14px 30px rgba(80,45,25,.15)
+}
+.dice.rolling{animation:roll .09s linear infinite}
+@keyframes roll{50%{transform:rotate(8deg) scale(1.06)}}
+.dice-instruction{margin-top:15px;line-height:1.45;color:#765f51;font-size:15px}
+
+/* PLATEAU */
+.board-container{padding:10px}
+.board{
+  position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:11px;padding:18px;
+  border:3px solid #d9c09b;border-radius:28px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.88),rgba(248,232,207,.88));
+  box-shadow:0 18px 40px rgba(80,45,25,.14);
+}
+.board:before{
+  content:"";position:absolute;left:28px;right:28px;top:50%;height:7px;background:#e4cfad;border-radius:8px;opacity:.55;z-index:0
+}
+.cell{
+  min-height:104px;position:relative;z-index:2;background:var(--paper);border:2px solid #dfceb5;border-radius:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:7px;
+  box-shadow:0 5px 10px rgba(80,45,25,.09);transition:.2s
+}
+.cell:hover{transform:translateY(-3px)}
+.cell.start{background:#edf7ed;border-color:#87b18f}
+.cell.special{background:#fff1cc;border-color:#e2b95e}
+.cell.finish{background:#efe7fb;border-color:#9d7bc1}
+.cell.current{border:4px solid var(--orange);box-shadow:0 0 0 5px rgba(217,130,43,.13),0 10px 20px rgba(111,63,36,.17)}
+.cell-number{font-size:9px;color:#9a887b;font-weight:bold}
+.cell-icon{font-size:29px;margin:4px 0}
+.cell-name{font-size:10px;font-weight:800;color:#4b392f}
+.pawns{position:absolute;bottom:4px;display:flex;justify-content:center;z-index:10}
+.pawn{width:24px;height:24px;border-radius:50%;border:3px solid white;margin-left:-5px;box-shadow:0 4px 7px rgba(0,0,0,.25),inset 0 3px 3px rgba(255,255,255,.35)}
+.pawn.moving{animation:pawnJump .45s ease-in-out}
+@keyframes pawnJump{40%{transform:translateY(-22px) scale(1.15)}70%{transform:translateY(-6px) scale(1.05)}}
+
+/* QUESTION */
+#questionScreen{background:linear-gradient(135deg,#f7ead7,#fffaf2)}
+.question-box{
+  width:min(930px,100%);background:rgba(255,253,248,.98);border:2px solid var(--line);border-radius:28px;
+  padding:38px;box-shadow:0 18px 48px rgba(80,45,25,.16)
+}
+.question-tag{
+  display:inline-block;background:#fff0cf;color:#89541e;border:1px solid #e0b65f;padding:7px 12px;border-radius:30px;
+  font-weight:800;font-size:13px;margin-bottom:12px
+}
+.question-box h1{font-size:clamp(24px,4vw,36px);line-height:1.35;color:var(--brown);margin:0}
+.options{display:grid;gap:13px;margin-top:28px}
+.option{
+  color:#34251e;
+  border:2px solid #e2d4c2;background:white;padding:16px;border-radius:15px;cursor:pointer;text-align:left;
+  display:flex;align-items:center;gap:14px;font-size:17px;transition:.15s
+}
+.option:hover{border-color:var(--orange);background:#fff8eb}
+.option:disabled{cursor:default}
+.option-letter{
+  color:#34251e;
+  width:42px;height:42px;flex-shrink:0;border-radius:50%;background:#f2e8da;display:flex;align-items:center;justify-content:center;
+  font-weight:900;color:var(--brown)
+}
+.option.correct{border-color:var(--green);background:#edf8ef}
+.option.correct .option-letter{
+  color:#34251e;background:var(--green);color:white}
+.option.wrong{border-color:var(--red);background:#fff0ee}
+.option.wrong .option-letter{
+  color:#34251e;background:var(--red);color:white}
+.feedback{margin-top:20px;padding:18px;border-radius:15px;line-height:1.55;font-size:16px}
+.feedback.good{background:#edf8ef;border:2px solid #a9d0b0}
+.feedback.bad{background:#fff0ee;border:2px solid #e4aaa3}
+
+/* APRÈS QUESTION */
+.board-wrapper{width:min(1250px,100%)}
+.board-text{text-align:center;font-size:25px;font-weight:800;color:var(--brown);margin-bottom:18px}
+#boardAfterQuestion{position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:11px;padding:18px;border-radius:28px;background:linear-gradient(145deg,#fffdf8,#f5e6cf);border:3px solid #d9c09b;box-shadow:0 18px 40px rgba(80,45,25,.14)}
+
+/* FIN TOUR / GAGNANT */
+.end-turn-box,.winner-box{
+  width:min(700px,100%);background:#fffdf8;border:2px solid var(--line);border-radius:28px;padding:45px;text-align:center;
+  box-shadow:0 18px 48px rgba(80,45,25,.15)
+}
+.end-turn-box h1,.winner-box h1{color:var(--brown);font-size:40px}
+.next-player-label{text-transform:uppercase;color:#806b5d;font-weight:800;margin-top:25px}
+.next-player-name{font-size:34px;color:var(--orange);font-weight:900;margin:8px 0 25px}
+.trophy{font-size:82px}
+.winner-name{font-size:34px;color:var(--orange);font-weight:900;margin:18px}
+.scores{display:grid;gap:9px;margin:25px 0}
+.score{padding:14px 16px;border-radius:12px;background:#f5eee5;display:flex;justify-content:space-between;font-weight:800}
+
+/* RESPONSIVE */
+@media(max-width:1000px){
+  .dice-and-board{grid-template-columns:1fr}
+  .dice-panel{order:1}.board-container{order:2}
+  .dice{width:125px;height:125px;font-size:78px}
+}
+@media(max-width:700px){
+  .players-list{grid-template-columns:1fr}
+  .players-box,.question-box{padding:24px}
+  .board,#boardAfterQuestion{grid-template-columns:repeat(4,1fr);gap:7px;padding:11px}
+  .cell{min-height:82px}.cell-icon{font-size:23px}.cell-name{font-size:9px}
+}
+@media(max-width:500px){
+  .screen{padding:10px}
+  .board,#boardAfterQuestion{grid-template-columns:repeat(3,1fr)}
+  .cell{min-height:76px}
+}
+</style>
+</head>
+<body>
+
+<section id="playersScreen" class="screen active">
+  <div class="players-box">
+    <div class="logo">🥖🧪</div>
+    <h1>Le Défi des Fermentations</h1>
+    <h2>Boulangerie-Pâtisserie</h2>
+    <p>Fermentation alcoolique ou lactique ? À toi de faire le bon choix pour atteindre le fournil final.</p>
+
+    <div class="rules">
+      <strong>Règle du jeu</strong><br>
+      1. Chaque joueur lance le dé.<br>
+      2. Il pioche une question sur les fermentations.<br>
+      3. <strong>Bonne réponse :</strong> il avance du nombre de cases indiqué par le dé.<br>
+      4. <strong>Mauvaise réponse :</strong> il reste sur sa case.<br>
+      5. Le premier à atteindre la case <strong>« Produit réussi »</strong> gagne.<br>Le jeu contient <strong>60 cartes-question</strong>, tirées et mélangées aléatoirement.
+    </div>
+
+    <div class="players-list">
+      <div class="player-field"><span class="player-color c1"></span><input id="player1" placeholder="Joueur 1" autocomplete="off"></div>
+      <div class="player-field"><span class="player-color c2"></span><input id="player2" placeholder="Joueur 2" autocomplete="off"></div>
+      <div class="player-field"><span class="player-color c3"></span><input id="player3" placeholder="Joueur 3" autocomplete="off"></div>
+      <div class="player-field"><span class="player-color c4"></span><input id="player4" placeholder="Joueur 4" autocomplete="off"></div>
+      <div class="player-field"><span class="player-color c5"></span><input id="player5" placeholder="Joueur 5" autocomplete="off"></div>
+      <div class="player-field"><span class="player-color c6"></span><input id="player6" placeholder="Joueur 6" autocomplete="off"></div>
+    </div>
+
+    <button class="main-button" onclick="startGame()">COMMENCER LA PARTIE</button>
+  </div>
+</section>
+
+<section id="diceScreen" class="screen">
+  <div class="game-wrap">
+    <div class="header">
+      <div id="playerCircle" class="player-circle"></div>
+      <h1 id="dicePlayerName"></h1>
+      <p>À toi de jouer : lance le dé puis réponds à la carte.</p>
+    </div>
+
+    <div class="dice-and-board">
+      <div class="dice-panel">
+        <div id="dice" class="dice">⚀</div>
+        <button id="rollButton" class="main-button" onclick="rollDice()">🎲 LANCER LE DÉ</button>
+        <div id="diceInstruction" class="dice-instruction">Le nombre obtenu déterminera ton déplacement si ta réponse est correcte.</div>
+      </div>
+
+      <div class="board-container">
+        <div id="board" class="board"></div>
+      </div>
+    </div>
+
+    <div id="questionButtonContainer" style="display:none;text-align:center;margin-top:20px">
+      <button class="main-button" onclick="goToQuestion()">🃏 PIOCHER UNE CARTE</button>
+    </div>
+  </div>
+</section>
+
+<section id="questionScreen" class="screen">
+  <div class="question-box">
+    <div class="question-tag">CARTE FERMENTATION</div>
+    <h1 id="questionText"></h1>
+    <div id="options" class="options"></div>
+    <div id="feedback" class="feedback" style="display:none"></div>
+  </div>
+</section>
+
+<section id="boardAfterQuestionScreen" class="screen">
+  <div class="board-wrapper">
+    <div id="boardText" class="board-text"></div>
+    <div id="boardAfterQuestion"></div>
+    <div style="text-align:center;margin-top:22px">
+      <button id="finishTurnButton" class="main-button" onclick="finishBoard()" disabled>TERMINER LE TOUR</button>
+    </div>
+  </div>
+</section>
+
+<section id="endTurnScreen" class="screen">
+  <div class="end-turn-box">
+    <h1>Tour terminé</h1>
+    <div id="finishedPlayer"></div>
+    <div class="next-player-label">Prochain joueur</div>
+    <div id="nextPlayerName" class="next-player-name"></div>
+    <button class="main-button" onclick="startNextTurn()">🎲 COMMENCER LE TOUR</button>
+  </div>
+</section>
+
+<section id="winnerScreen" class="screen">
+  <div class="winner-box">
+    <div class="trophy">🏆</div>
+    <h1>Produit réussi !</h1>
+    <div id="winnerName" class="winner-name"></div>
+    <p>Le joueur a maîtrisé les principes des fermentations en boulangerie-pâtisserie.</p>
+    <div id="scores" class="scores"></div>
+    <button class="main-button" onclick="newGame()">🔄 NOUVELLE PARTIE</button>
+  </div>
+</section>
+
+<script>
+let players=[], currentPlayerIndex=0, currentPlayer=null, diceValue=0, currentCard=null;
+let answered=false, remainingCards=[];
+
+const colors=["#d65b4a","#5a8fc2","#5b9a68","#9a68a8","#e2a23a","#4c9a91"];
+const diceFaces=["⚀","⚁","⚂","⚃","⚄","⚅"];
+
+const boardCells=[
+ {icon:"🏠",name:"Départ",type:"start"},
+ {icon:"🌾",name:"Farine"},
+ {icon:"🧫",name:"Levure",type:"special"},
+ {icon:"💧",name:"Eau"},
+ {icon:"🍞",name:"Pétrissage"},
+ {icon:"⏱️",name:"Pointage"},
+ {icon:"🫧",name:"CO₂",type:"special"},
+ {icon:"🥖",name:"Pâte levée"},
+ {icon:"🦠",name:"Bactéries lactiques"},
+ {icon:"🍋",name:"Acidité",type:"special"},
+ {icon:"🥣",name:"Levain"},
+ {icon:"🌡️",name:"Température"},
+ {icon:"🍺",name:"Éthanol"},
+ {icon:"🫧",name:"Gaz produit",type:"special"},
+ {icon:"🥐",name:"Façonnage"},
+ {icon:"⏳",name:"Apprêt"},
+ {icon:"🔥",name:"Cuisson",type:"special"},
+ {icon:"🧪",name:"Fermentation"},
+ {icon:"⚖️",name:"Équilibre"},
+ {icon:"👃",name:"Arômes"},
+ {icon:"🔬",name:"Contrôle"},
+ {icon:"🥖",name:"Produit fini"},
+ {icon:"⭐",name:"Produit réussi",type:"finish"}
+];
+
+const cards=[
+{q:"Quelle fermentation est principalement réalisée par les levures de boulanger dans une pâte à pain ?",o:[["La fermentation alcoolique",true],["La fermentation lactique",false],["La fermentation acétique",false],["Aucune fermentation",false]],e:"La levure de boulanger réalise principalement une fermentation alcoolique."},
+{q:"Quel gaz produit par la levure permet à une pâte à pain de gonfler ?",o:[["O₂",false],["CO₂",true],["N₂",false],["H₂",false]],e:"Le CO₂ produit par la levure est retenu dans la pâte et participe à sa levée."},
+{q:"Quel produit est caractéristique de la fermentation alcoolique ?",o:[["L'acide lactique",false],["L'éthanol",true],["Le sel",false],["L'amidon",false]],e:"La fermentation alcoolique produit notamment de l'éthanol et du CO₂."},
+{q:"Quels microorganismes participent à la fermentation lactique du levain ?",o:[["Les bactéries lactiques",true],["Les virus",false],["Les parasites",false],["Les moisissures uniquement",false]],e:"Les bactéries lactiques produisent notamment de l'acide lactique."},
+{q:"Quel produit est caractéristique de la fermentation lactique ?",o:[["L'acide lactique",true],["L'éthanol uniquement",false],["Le sel",false],["L'amidon",false]],e:"La fermentation lactique conduit notamment à la formation d'acide lactique."},
+{q:"Quel est le rôle principal du CO₂ dans une pâte à pain ?",o:[["Donner le goût salé",false],["Faire lever la pâte",true],["Remplacer l'eau",false],["Empêcher la fermentation",false]],e:"Le CO₂ forme des bulles retenues par la pâte et augmente son volume."},
+{q:"Quelle association est correcte ?",o:[["Levure → fermentation alcoolique → CO₂ + éthanol",true],["Levure → fermentation lactique → sel",false],["Bactéries lactiques → sel",false],["Levure → aucune transformation",false]],e:"La levure transforme des sucres lors de la fermentation alcoolique et produit notamment CO₂ et éthanol."},
+{q:"Pourquoi le levain peut-il être plus acidulé qu'une pâte levée uniquement avec de la levure de boulanger ?",o:[["Les bactéries lactiques produisent des acides",true],["Il ne contient jamais de levures",false],["On y ajoute forcément du vinaigre",false],["La farine devient du sel",false]],e:"Les bactéries lactiques contribuent à l'acidification du levain."},
+{q:"La fermentation alcoolique et la fermentation lactique sont-elles toutes deux des transformations réalisées par des microorganismes ?",o:[["Oui",true],["Non",false],["Seulement en pâtisserie",false],["Seulement pendant la cuisson",false]],e:"Oui, ce sont des transformations biologiques réalisées par des microorganismes."},
+{q:"Quel produit de boulangerie est directement concerné par la production de CO₂ par les levures ?",o:[["Le pain",true],["Le sucre seul",false],["Le beurre seul",false],["Le sel seul",false]],e:"Le CO₂ est essentiel à la levée des pains et autres produits à pâte levée."},
+{q:"Pourquoi une pâte peut-elle moins fermenter si les conditions ne conviennent pas aux microorganismes ?",o:[["Leur activité peut être ralentie",true],["La farine disparaît",false],["Le CO₂ devient du sel",false],["La pâte cuit immédiatement",false]],e:"Des conditions défavorables peuvent ralentir l'activité des microorganismes."},
+{q:"Quel est le rôle de la levure de boulanger ?",o:[["Transformer certains sucres au cours de la fermentation",true],["Remplacer le sel",false],["Empêcher la production de gaz",false],["Transformer toute la farine en eau",false]],e:"La levure utilise des sucres disponibles et les transforme lors de la fermentation."},
+{q:"Pourquoi le CO₂ peut-il rester sous forme de bulles dans une pâte ?",o:[["La structure de la pâte peut retenir le gaz",true],["Le CO₂ devient solide",false],["Le sel produit des bulles",false],["L'eau devient du CO₂",false]],e:"La structure de la pâte retient une partie du gaz produit."},
+{q:"Quel duo correspond à la fermentation lactique ?",o:[["Bactéries lactiques + acide lactique",true],["Levures + sel",false],["Moisissures + sucre",false],["Virus + CO₂",false]],e:"La fermentation lactique est associée aux bactéries lactiques et à la formation d'acide lactique."},
+{q:"Dans un levain, quelle affirmation est la plus juste ?",o:[["Levures et bactéries lactiques peuvent agir ensemble",true],["Il ne contient que de l'eau",false],["Il ne contient aucun microorganisme",false],["Il ne peut jamais produire de gaz",false]],e:"Le levain associe notamment levures et bactéries lactiques."},
+{q:"Quelle différence simple peut-on retenir entre les deux fermentations ?",o:[["Alcoolique : éthanol + CO₂ ; lactique : acide lactique",true],["Alcoolique : sel ; lactique : eau",false],["Elles produisent exactement les mêmes produits",false],["Aucune ne transforme les sucres",false]],e:"C'est le repère essentiel de la séquence."},
+{q:"Quel effet de la fermentation alcoolique est recherché en boulangerie ?",o:[["Le développement du volume de la pâte grâce au CO₂",true],["La suppression de toute eau",false],["La fabrication de sel",false],["L'empêchement du développement",false]],e:"Le CO₂ produit par les levures permet la levée."},
+{q:"Pourquoi l'éthanol produit par les levures n'est-il pas le principal produit recherché dans le pain fini ?",o:[["Une grande partie s'évapore lors de la cuisson",true],["Il devient du sel",false],["Il n'est jamais produit",false],["Il empêche la cuisson",false]],e:"Une grande partie de l'éthanol est éliminée lors de la cuisson."},
+{q:"Quelle situation correspond à une fermentation lactique en boulangerie ?",o:[["L'acidification progressive d'un levain",true],["La fonte du beurre",false],["La caramélisation du sucre",false],["La congélation d'une pâte",false]],e:"Les bactéries lactiques du levain produisent des acides."},
+{q:"Quel est l'intérêt des fermentations pour le boulanger-pâtissier ?",o:[["Elles participent au volume, à la structure, à l'acidité et aux arômes",true],["Elles remplacent toutes les étapes",false],["Elles servent uniquement à nettoyer",false],["Elles empêchent toute transformation",false]],e:"Les fermentations influencent plusieurs caractéristiques du produit."},
+{q:"Quelle suite résume correctement la fermentation alcoolique en boulangerie ?",o:[["Levure → sucres → fermentation → CO₂ + éthanol",true],["Levure → sel → cuisson → CO₂",false],["Bactéries → beurre → éthanol",false],["Farine → eau → sel → CO₂",false]],e:"La levure transforme des sucres et produit notamment CO₂ et éthanol."},
+{q:"Quel gaz est principalement responsable de l'augmentation de volume d'une pâte levée ?",o:[["CO₂",true],["O₂",false],["N₂",false],["Hélium",false]],e:"Le CO₂ produit par la fermentation est retenu sous forme de bulles."},
+{q:"Quel composé contribue à l'acidité du levain ?",o:[["L'acide lactique",true],["L'éthanol uniquement",false],["Le sel",false],["L'amidon",false]],e:"L'acide lactique produit par les bactéries contribue à l'acidité du levain."},
+{q:"Le levain contient-il uniquement des bactéries lactiques ?",o:[["Non, il contient aussi des levures",true],["Oui, toujours",false],["Il ne contient aucun microorganisme",false],["Il contient uniquement des moisissures",false]],e:"Le levain est un ensemble de microorganismes, notamment levures et bactéries lactiques."},
+{q:"Quelle fermentation est particulièrement associée à la levure de boulanger ?",o:[["La fermentation alcoolique",true],["La fermentation lactique uniquement",false],["La fermentation acétique",false],["La fermentation minérale",false]],e:"La levure de boulanger réalise principalement une fermentation alcoolique."},
+{q:"Quelle fermentation explique directement la production de CO₂ par la levure ?",o:[["La fermentation alcoolique",true],["La fermentation lactique uniquement",false],["La cuisson",false],["La congélation",false]],e:"La fermentation alcoolique de la levure produit notamment du CO₂."},
+{q:"Quel microorganisme est recherché pour faire lever une pâte à pain ?",o:[["La levure de boulanger",true],["Une moisissure",false],["Un virus",false],["Un parasite",false]],e:"La levure de boulanger est utilisée pour produire du CO₂ par fermentation."},
+{q:"Quel microorganisme joue un rôle important dans l'acidification du levain ?",o:[["La bactérie lactique",true],["Le virus",false],["Le parasite",false],["La moisissure uniquement",false]],e:"Les bactéries lactiques produisent des acides."},
+{q:"Quel phénomène observe-t-on lorsque le volume d'une pâte augmente pendant la fermentation ?",o:[["La pâte lève",true],["La pâte congèle",false],["La pâte devient du beurre",false],["La pâte perd toute son eau",false]],e:"Le CO₂ produit par les levures augmente le volume de la pâte."},
+{q:"Pourquoi les bulles de CO₂ restent-elles partiellement piégées dans la pâte ?",o:[["La structure de la pâte retient le gaz",true],["Le CO₂ devient liquide",false],["Le sel emprisonne le gaz",false],["Le gaz se transforme en farine",false]],e:"La structure de la pâte permet de retenir les bulles de gaz."},
+{q:"Quel lien existe entre fermentation et arômes ?",o:[["La fermentation peut contribuer au développement aromatique",true],["La fermentation supprime tous les arômes",false],["La fermentation produit uniquement du sel",false],["Elle n'a aucun effet sur le produit",false]],e:"Les transformations liées à la fermentation participent au développement des arômes."},
+{q:"Quel lien existe entre fermentation lactique et pH ?",o:[["La production d'acides peut faire diminuer le pH",true],["Elle augmente toujours le pH",false],["Elle n'a aucun lien avec le pH",false],["Elle transforme le pH en CO₂",false]],e:"La production d'acides entraîne généralement une acidification du milieu."},
+{q:"Un levain devient progressivement plus acide. Quelle explication est la plus pertinente ?",o:[["Les bactéries lactiques produisent des acides",true],["Les levures produisent du sel",false],["La farine devient du vinaigre",false],["L'eau devient du sucre",false]],e:"Les bactéries lactiques contribuent à l'acidification du levain."},
+{q:"Quelle substance est consommée par les levures lors de leur activité fermentaire ?",o:[["Des sucres",true],["Du sel uniquement",false],["Du beurre uniquement",false],["De l'eau uniquement",false]],e:"Les levures utilisent des sucres disponibles pour leur activité fermentaire."},
+{q:"Quel résultat de la fermentation alcoolique est particulièrement utile pour obtenir une mie alvéolée ?",o:[["La production de CO₂",true],["La production de sel",false],["La production de beurre",false],["La production d'amidon",false]],e:"Le CO₂ contribue à la formation des alvéoles."},
+{q:"Pourquoi le boulanger contrôle-t-il le temps de fermentation ?",o:[["Parce que la fermentation influence le volume et les caractéristiques du produit",true],["Parce que la pâte doit toujours être congelée",false],["Pour empêcher toute transformation",false],["Pour supprimer les levures",false]],e:"Le temps de fermentation influence notamment le développement de la pâte."},
+{q:"Pourquoi la température peut-elle influencer la fermentation ?",o:[["Elle influence l'activité des microorganismes",true],["Elle transforme automatiquement le CO₂ en sel",false],["Elle empêche toujours toute fermentation",false],["Elle remplace la farine",false]],e:"L'activité des microorganismes dépend des conditions du milieu, notamment de la température."},
+{q:"Que se passe-t-il si l'activité des levures est ralentie ?",o:[["La fermentation peut être plus lente et la pâte lever moins rapidement",true],["La pâte devient immédiatement cuite",false],["Le sel disparaît",false],["La farine devient du beurre",false]],e:"Une activité réduite des levures ralentit la production de CO₂."},
+{q:"Quelle affirmation est correcte sur la fermentation alcoolique ?",o:[["Elle produit notamment du CO₂ et de l'éthanol",true],["Elle produit uniquement de l'acide lactique",false],["Elle ne produit aucun gaz",false],["Elle se produit uniquement pendant la cuisson",false]],e:"La fermentation alcoolique des levures produit notamment CO₂ et éthanol."},
+{q:"Quelle affirmation est correcte sur la fermentation lactique ?",o:[["Elle produit notamment de l'acide lactique",true],["Elle produit uniquement de l'éthanol",false],["Elle ne transforme pas les sucres",false],["Elle se produit uniquement dans le four",false]],e:"La fermentation lactique produit notamment de l'acide lactique."},
+{q:"Quelle association est correcte pour le levain ?",o:[["Levures + bactéries lactiques",true],["Virus + parasites",false],["Moisissures uniquement",false],["Sel + sucre uniquement",false]],e:"Le levain associe notamment levures et bactéries lactiques."},
+{q:"Pourquoi le levain peut-il donner un profil aromatique différent d'une pâte à la levure seule ?",o:[["Les activités des microorganismes du levain modifient le milieu et participent aux arômes",true],["Parce qu'il contient toujours du beurre",false],["Parce qu'il ne fermente pas",false],["Parce qu'il est toujours cuit avant utilisation",false]],e:"Les fermentations et les produits formés participent au profil aromatique."},
+{q:"Quel produit est associé à la fermentation alcoolique mais peut s'évaporer pendant la cuisson ?",o:[["L'éthanol",true],["L'acide lactique",false],["Le sel",false],["L'amidon",false]],e:"L'éthanol est produit par les levures et une grande partie s'évapore lors de la cuisson."},
+{q:"Quel produit reste particulièrement important pour l'acidification du levain ?",o:[["L'acide lactique",true],["L'éthanol uniquement",false],["Le CO₂ uniquement",false],["Le sel",false]],e:"L'acide lactique participe à l'acidification du levain."},
+{q:"Quelle transformation est recherchée lors du pointage d'une pâte levée ?",o:[["La fermentation et le développement de la pâte",true],["La congélation",false],["La cuisson complète",false],["La caramélisation",false]],e:"Le pointage est une phase pendant laquelle la fermentation participe au développement de la pâte."},
+{q:"Pourquoi une pâte levée présente-t-elle des alvéoles ?",o:[["Les bulles de CO₂ produites par la fermentation sont retenues dans la pâte",true],["Parce que le sel forme des trous",false],["Parce que la farine devient liquide",false],["Parce que le four injecte toujours du gaz",false]],e:"Les bulles de CO₂ participent à la structure alvéolée de la mie."},
+{q:"Quelle phrase est correcte ?",o:[["Une fermentation peut modifier la texture et le volume d'un produit",true],["Une fermentation ne change jamais le produit",false],["Une fermentation est uniquement une cuisson",false],["Une fermentation détruit toujours le produit",false]],e:"Les fermentations peuvent modifier plusieurs caractéristiques du produit alimentaire."},
+{q:"Quel couple microorganisme/fermentation est correct ?",o:[["Levure de boulanger / fermentation alcoolique",true],["Virus / fermentation alcoolique",false],["Parasite / fermentation lactique",false],["Moisissure / fermentation alcoolique de la pâte à pain",false]],e:"La levure de boulanger est principalement associée à la fermentation alcoolique."},
+{q:"Quel couple microorganisme/produit est correct ?",o:[["Bactéries lactiques / acide lactique",true],["Virus / acide lactique",false],["Parasites / CO₂",false],["Moisissures / éthanol de la levure",false]],e:"Les bactéries lactiques produisent notamment de l'acide lactique."},
+{q:"Quelle conséquence peut avoir une fermentation trop lente ?",o:[["Le développement de la pâte peut être insuffisant",true],["La pâte cuit instantanément",false],["La pâte devient automatiquement acide",false],["Le sel disparaît",false]],e:"Une fermentation trop lente peut limiter la production de CO₂ et donc le développement."},
+{q:"Quelle conséquence peut avoir une fermentation correctement conduite ?",o:[["Un volume et une structure adaptés au produit recherché",true],["La suppression de toutes les levures",false],["La disparition de toute eau",false],["La transformation du pain en beurre",false]],e:"Une fermentation maîtrisée contribue au développement attendu du produit."},
+{q:"Quel est le rôle du CO₂ avant la cuisson ?",o:[["Il contribue à augmenter le volume de la pâte",true],["Il donne le goût salé",false],["Il remplace le gluten",false],["Il transforme le beurre en sucre",false]],e:"Avant la cuisson, le CO₂ s'accumule dans les alvéoles et participe à la levée."},
+{q:"Quel est le rôle de la cuisson vis-à-vis de l'éthanol produit pendant la fermentation ?",o:[["Une grande partie de l'éthanol peut s'évaporer",true],["Elle produit tout l'éthanol",false],["Elle transforme l'éthanol en sel",false],["Elle empêche toute évaporation",false]],e:"L'éthanol est volatil et une grande partie s'élimine lors de la cuisson."},
+{q:"Quelle phrase résume le mieux la fermentation alcoolique de la levure ?",o:[["La levure transforme des sucres et produit notamment CO₂ et éthanol",true],["La levure transforme le sel en acide lactique",false],["La levure ne transforme aucune substance",false],["La levure produit uniquement de l'eau",false]],e:"C'est le mécanisme essentiel à retenir pour la fermentation alcoolique en boulangerie."},
+{q:"Quelle phrase résume le mieux la fermentation lactique ?",o:[["Des bactéries lactiques transforment des substrats et produisent notamment de l'acide lactique",true],["Les levures produisent uniquement du sel",false],["Les bactéries ne transforment rien",false],["La fermentation lactique est une cuisson",false]],e:"La fermentation lactique est notamment associée à la production d'acide lactique."},
+{q:"Quel produit peut être obtenu grâce à l'action conjointe des levures et bactéries du levain ?",o:[["Un pain au levain avec une acidité et des arômes caractéristiques",true],["Du beurre",false],["Du sel",false],["Du sucre pur",false]],e:"Les microorganismes du levain contribuent aux caractéristiques du pain au levain."},
+{q:"Pourquoi le levain est-il intéressant en boulangerie ?",o:[["Il permet une fermentation associant notamment levures et bactéries lactiques",true],["Il ne contient aucun microorganisme",false],["Il empêche la pâte de fermenter",false],["Il remplace la cuisson",false]],e:"Le levain permet une fermentation complexe qui influence volume, acidité et arômes."},
+{q:"Quelle relation entre fermentation et volume est correcte ?",o:[["La production de CO₂ peut augmenter le volume de la pâte",true],["L'acide lactique fait toujours doubler le volume",false],["Le sel produit du CO₂",false],["La cuisson produit la fermentation",false]],e:"Le CO₂ produit par les levures est un facteur majeur de la levée."},
+{q:"Quelle relation entre fermentation lactique et goût est correcte ?",o:[["Les acides produits peuvent contribuer à une saveur plus acidulée",true],["La fermentation lactique rend toujours le produit sucré",false],["Elle supprime tous les arômes",false],["Elle donne toujours un goût salé",false]],e:"L'acidification liée à la fermentation lactique peut contribuer à une saveur acidulée."},
+{q:"Quel est le meilleur résumé de la séquence ?",o:[["Fermentations alcoolique et lactique → transformations des aliments → effets sur volume, acidité et arômes",true],["Fermentation → uniquement cuisson",false],["Fermentation → uniquement conservation",false],["Fermentation → aucune transformation",false]],e:"Les fermentations sont des transformations biologiques importantes pour de nombreux produits de boulangerie-pâtisserie."}
+];
+
+function shuffle(a){
+  const x=[...a];
+  for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}
+  return x;
+}
+function createNewDeck(){
+  remainingCards=shuffle(cards.map(c=>({q:c.q,e:c.e,o:shuffle(c.o)})));
+}
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+function startGame(){
+  players=[];
+  for(let i=1;i<=6;i++){
+    const input=document.getElementById("player"+i), value=input.value.trim();
+    if(value) players.push({name:value,color:colors[i-1],position:0,points:0});
+  }
+  if(players.length<2){alert("Il faut au moins 2 joueurs pour commencer.");return}
+  createNewDeck(); currentPlayerIndex=0; prepareDiceScreen();
+}
+function prepareDiceScreen(){
+  currentPlayer=players[currentPlayerIndex];
+  document.getElementById("dicePlayerName").textContent=currentPlayer.name;
+  const circle=document.getElementById("playerCircle");
+  circle.style.background=currentPlayer.color;
+  circle.textContent=currentPlayer.name.charAt(0).toUpperCase();
+  document.getElementById("dice").textContent="⚀";
+  document.getElementById("rollButton").disabled=false;
+  document.getElementById("questionButtonContainer").style.display="none";
+  document.getElementById("diceInstruction").textContent="Le nombre obtenu déterminera ton déplacement si ta réponse est correcte.";
+  renderBoard("board");
+  showScreen("diceScreen");
+}
+function rollDice(){
+  const btn=document.getElementById("rollButton"); btn.disabled=true;
+  const dice=document.getElementById("dice"); dice.classList.add("rolling");
+  let count=0;
+  const anim=setInterval(()=>{
+    dice.textContent=diceFaces[Math.floor(Math.random()*6)]; count++;
+    if(count>=12){
+      clearInterval(anim); dice.classList.remove("rolling");
+      diceValue=Math.floor(Math.random()*6)+1;
+      dice.textContent=diceFaces[diceValue-1];
+      document.getElementById("diceInstruction").innerHTML=`🎲 Résultat : <strong>${diceValue}</strong><br><br>Réponds correctement à la carte pour avancer.`;
+      document.getElementById("questionButtonContainer").style.display="block";
+    }
+  },85);
+}
+function renderBoard(id){
+  const board=document.getElementById(id); board.innerHTML="";
+  boardCells.forEach((cell,index)=>{
+    const el=document.createElement("div"); el.className="cell";
+    if(cell.type) el.classList.add(cell.type);
+    if(currentPlayer.position===index) el.classList.add("current");
+    const here=players.filter(p=>p.position===index);
+    el.innerHTML=`<div class="cell-number">CASE ${index+1}</div><div class="cell-icon">${cell.icon}</div><div class="cell-name">${cell.name}</div><div class="pawns">${here.map(p=>`<div class="pawn" style="background:${p.color}"></div>`).join("")}</div>`;
+    board.appendChild(el);
+  });
+}
+function goToQuestion(){drawCard();showQuestion()}
+function drawCard(){
+  if(remainingCards.length===0) createNewDeck();
+  currentCard=remainingCards.shift();
+}
+function showQuestion(){
+  answered=false;
+  document.getElementById("questionText").textContent=currentCard.q;
+  const options=document.getElementById("options"); options.innerHTML="";
+  ["A","B","C","D"].forEach((letter,index)=>{
+    const b=document.createElement("button"); b.className="option";
+    b.innerHTML=`<span class="option-letter">${letter}</span><span style="color:#34251e;">${currentCard.o[index][0]}</span>`;
+    b.onclick=()=>answerQuestion(index); options.appendChild(b);
+  });
+  document.getElementById("feedback").style.display="none";
+  showScreen("questionScreen");
+}
+function answerQuestion(index){
+  if(answered)return;
+  answered=true;
+  const buttons=document.querySelectorAll(".option"); buttons.forEach(b=>b.disabled=true);
+  const isCorrect=currentCard.o[index][1];
+  const correctIndex=currentCard.o.findIndex(x=>x[1]===true);
+  buttons[correctIndex].classList.add("correct");
+  if(!isCorrect) buttons[index].classList.add("wrong");
+  if(isCorrect) currentPlayer.points++;
+  const feedback=document.getElementById("feedback");
+  feedback.style.display="block"; feedback.className="feedback "+(isCorrect?"good":"bad");
+  const correctLetter=["A","B","C","D"][correctIndex];
+  if(isCorrect){
+    feedback.innerHTML=`<strong>✅ Bonne réponse !</strong><p>${currentCard.e}</p><p>🎲 Tu as obtenu <strong>${diceValue}</strong> au dé.</p><p>Tu vas avancer de <strong>${diceValue} case${diceValue>1?"s":""}</strong>.</p><button class="main-button" onclick="showBoardAfterQuestion()">CONTINUER</button>`;
+  }else{
+    feedback.innerHTML=`<strong>❌ Mauvaise réponse</strong><p>${currentCard.e}</p><p>La bonne réponse était <strong>${correctLetter}</strong>.</p><p>🚫 Tu restes sur ta case pour ce tour.</p><button class="main-button" onclick="showBoardAfterQuestion()">CONTINUER</button>`;
+  }
+}
+function showBoardAfterQuestion(){
+  if(answered && currentCard){
+    const old=currentPlayer.position;
+    if(currentCard.o.find(x=>x[1]===true) && document.getElementById("feedback").classList.contains("good")){
+      currentPlayer.position=Math.min(boardCells.length-1,currentPlayer.position+diceValue);
+    }
+  }
+  document.getElementById("boardText").textContent=currentPlayer.position>=boardCells.length-1
+    ?"🏆 Tu as atteint le produit réussi !"
+    :`🥖 ${currentPlayer.name} arrive sur « ${boardCells[currentPlayer.position].name} »`;
+  renderBoard("boardAfterQuestion");
+  document.getElementById("finishTurnButton").disabled=false;
+  showScreen("boardAfterQuestionScreen");
+}
+function finishBoard(){
+  if(currentPlayer.position>=boardCells.length-1){showWinner();return}
+  const next=(currentPlayerIndex+1)%players.length;
+  document.getElementById("finishedPlayer").textContent=currentPlayer.name;
+  document.getElementById("nextPlayerName").textContent=players[next].name;
+  showScreen("endTurnScreen");
+}
+function startNextTurn(){currentPlayerIndex=(currentPlayerIndex+1)%players.length;prepareDiceScreen()}
+function showWinner(){
+  document.getElementById("winnerName").textContent="🎉 "+currentPlayer.name;
+  const scores=document.getElementById("scores"); scores.innerHTML="";
+  [...players].sort((a,b)=>b.points-a.points).forEach((p,i)=>{
+    const row=document.createElement("div"); row.className="score";
+    row.innerHTML=`<span>${i+1}. ${p.name}</span><span>${p.points} point${p.points>1?"s":""}</span>`;
+    scores.appendChild(row);
+  });
+  showScreen("winnerScreen");
+}
+function newGame(){
+  players=[];currentPlayer=null;currentPlayerIndex=0;diceValue=0;currentCard=null;answered=false;remainingCards=[];
+  for(let i=1;i<=6;i++) document.getElementById("player"+i).value="";
+  showScreen("playersScreen");
+}
+</script>
+</body>
+</html>
